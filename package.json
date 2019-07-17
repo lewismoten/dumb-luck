@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/lewismoten/dumb-luck/issues"
   },
-  "homepage": "https://github.com/lewismoten/dumb-luck#readme"
+  "homepage": "https://github.com/lewismoten/dumb-luck#readme",
+  "dependencies": {
+    "neuralnet": "^1.0.1"
+  }
 }
