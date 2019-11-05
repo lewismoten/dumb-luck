@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/lewismoten/dumb-luck#readme",
   "dependencies": {
-    "neuralnet": "^1.0.1"
+    "neuralnet": "^1.0.1",
+    "softmax-fn": "^1.0.8"
   }
 }

@@ -79,12 +79,15 @@ const getWinnableSpot = board => {
   const move = newMove();
   if (!hasWinnableSpot(board)) return move;
   sequences.forEach(moveToCompleteSequence(board, move, nextMark(board)));
+  return move.map(asWeighted);
+}
+const getMax = (a, b) => a > b ? a : b;
+const getMin = (a, b) => a < b ? a : b;
+const getSum = (a, b) => a + b;
 
-  // if multiple winnable scenarios with same spot, choose most winnable
-  while (move.some(isMoveBetter))
-    move.forEach(demoteMove)
-
-  return move;
+const asWeighted = (value, index, values) => {
+  const total = values.reduce(getSum, 0);
+  return total === 0 ? 0 : value / total;
 }
 
 const isMoveBetter = move => move > YES
@@ -127,6 +130,8 @@ const isWinnerFor = mark => board => sequences.some(([c1,c2,c3]) =>
   board[c3] === mark
 )
 
+const hasOneWinnableSpot = board => !canWinMultipleSequences(board)
+
 console.log("isValid", boards.filter(isValid).length);
 console.log("canPlay", boards.filter(canPlay).length);
 console.log("wasJustCompleted", boards.filter(wasJustCompleted).length);
@@ -146,12 +151,13 @@ var config = {
 var neuralnet = NeuralNetConstructor(config)
 
 
-var aboutToWin = boards.filter(hasWinnableSpot);
+//var aboutToWin = boards.filter(hasWinnableSpot).filter(hasOneWinnableSpot);
+var aboutToWin = boards.filter(canWinMultipleSequences);
 var expectedMoves = aboutToWin.map(getWinnableSpot);
 
 if (true) {
   console.log("Training...");
-  var MAX_TRAIN = 100;
+  var MAX_TRAIN = 10000;
   var lastPercent = 0;
   for(var i = 0; i < MAX_TRAIN; i++) {
     var curPercent = ((i / MAX_TRAIN) * 100).toFixed(1) + "%";
@@ -175,13 +181,16 @@ if (true) {
     var input = aboutToWin[i];
     var prediction = neuralnet.predict(input);
     var expectation = expectedMoves[i];
-    if (!prediction.some(function(value, index) {
+    var isGood = !prediction.some(function(value, index) {
       return expectation[index] === YES ? (value < .5) : (value >= .5);
-    })) count_GOOD++;
-    console.log("Board %s", i);
+    })
+    if (isGood) count_GOOD++;
+    console.log("Board %s", encode(input), isGood ? "" : " - bad prediction");
     console.log(displayResult(input, expectedMoves[i], prediction))
   }
-
+// two wins - two people? sometimes same person. need to ignore.
+// 18819
+// 18793
 
   console.log("Good predictions %s out of %s (%s%)",
     count_GOOD,
@@ -207,7 +216,7 @@ function displayResult(board, expected, prediction) {
       lines[line_i] += "|";
     }
 
-    if (expected[i] === YES) {
+    if (expected[i] !== NO) {
       lines[line_i] += "[";
     } else {
       lines[line_i] += " ";
@@ -220,7 +229,7 @@ function displayResult(board, expected, prediction) {
     } else if (value === BLANK) {
       lines[line_i] += " ";
     }
-    if (expected[i] === YES) {
+    if (expected[i] !== NO) {
       lines[line_i] += "]";
     } else {
       lines[line_i] += " ";
@@ -238,15 +247,15 @@ function displayResult(board, expected, prediction) {
 
     var value = prediction[i];
     if (value < 0.001) {
-      lines[line_i] += "     ";
+      lines[line_i] += "      ";
     } else {
       var s = (value * 100).toFixed(2);
-      while(s.length < 5) s = " " + s;
+      while(s.length < 6) s = " " + s;
       lines[line_i] += s;
     }
 
 
   }
-  var text = isBadPrediction ? "BAD PREDICTION!\n" : ""
+  var text = "";// isBadPrediction ? "BAD PREDICTION!\n" : ""
   return text + lines.join("\n");
 }
