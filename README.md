@@ -1,3 +1,5 @@
+![dumb-luck: Numbers and neural nets for tic-tac-toe and pick 3](docs/images/social-preview.png)
+
 # dumb-luck
 
 Playing around with numbers in Node.js.
